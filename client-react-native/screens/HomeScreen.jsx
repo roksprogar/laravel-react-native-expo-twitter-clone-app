@@ -18,15 +18,35 @@ const HomeScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
 
   useEffect(() => {
+    console.log('useEffect current page: ' + page);
     getAllTweets();
-  }, []);
+  }, [page]);
 
   function getAllTweets() {
+    console.log(`https://staging.lifetivation.com/api/tweets?page=${page}`);
     axios
-      .get('https://staging.lifetivation.com/api/tweets')
-      .then((response) => setData(response.data))
+      .get(`https://staging.lifetivation.com/api/tweets?page=${page}`)
+      .then((response) => {
+        if (page === 1) {
+          setData(response.data.data);
+        } else {
+          setData([...data, ...response.data.data]);
+        }
+
+        if (!response.data.next_page_url) {
+          setIsAtEndOfScrolling(true);
+        }
+
+        console.log(
+          'page: ' + page,
+          ', data.length: ' + data.length,
+          ', response.data.data.length: ' + response.data.data.length
+        );
+      })
       .catch((error) => console.log(error.response))
       .finally(() => {
         setIsLoading(false);
@@ -35,8 +55,14 @@ const HomeScreen = ({ navigation }) => {
   }
 
   function handleRefresh() {
+    setPage(1);
     setIsRefreshing(true);
-    getAllTweets();
+    setIsAtEndOfScrolling(false);
+  }
+
+  function handleEnd() {
+    console.log('handleEnd page: ' + page);
+    setPage(page + 1);
   }
 
   const goToProfile = () => navigation.navigate('StackProfile');
@@ -127,6 +153,13 @@ const HomeScreen = ({ navigation }) => {
           )}
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
+          onEndReached={handleEnd}
+          onEndReachedThreshold={0.001}
+          ListFooterComponent={() =>
+            !isAtEndOfScrolling && (
+              <ActivityIndicator size="large" color="gray" />
+            )
+          }
         />
       )}
       <TouchableOpacity style={styles.floatingButton} onPress={goToNewTweet}>
