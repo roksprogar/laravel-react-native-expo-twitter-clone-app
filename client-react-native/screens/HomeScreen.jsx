@@ -9,7 +9,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import axios from 'axios';
+import axiosConfig from '../helpers/axiosConfig';
 import { EvilIcons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -22,14 +22,12 @@ const HomeScreen = ({ navigation }) => {
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
 
   useEffect(() => {
-    console.log('useEffect current page: ' + page);
     getAllTweets();
   }, [page]);
 
   function getAllTweets() {
-    console.log(`https://staging.lifetivation.com/api/tweets?page=${page}`);
-    axios
-      .get(`https://staging.lifetivation.com/api/tweets?page=${page}`)
+    axiosConfig
+      .get(`tweets?page=${page}`)
       .then((response) => {
         if (page === 1) {
           setData(response.data.data);
@@ -40,12 +38,6 @@ const HomeScreen = ({ navigation }) => {
         if (!response.data.next_page_url) {
           setIsAtEndOfScrolling(true);
         }
-
-        console.log(
-          'page: ' + page,
-          ', data.length: ' + data.length,
-          ', response.data.data.length: ' + response.data.data.length
-        );
       })
       .catch((error) => console.log(error.response))
       .finally(() => {
@@ -55,19 +47,26 @@ const HomeScreen = ({ navigation }) => {
   }
 
   function handleRefresh() {
-    setPage(1);
+    page === 1 ? getAllTweets() : setPage(1);
     setIsRefreshing(true);
     setIsAtEndOfScrolling(false);
   }
 
   function handleEnd() {
-    console.log('handleEnd page: ' + page);
     setPage(page + 1);
   }
 
-  const goToProfile = () => navigation.navigate('StackProfile');
-  const goToSingleTweet = () => navigation.navigate('StackTweet');
-  const goToNewTweet = () => navigation.navigate('StackNewTweet');
+  const goToProfile = () => {
+    navigation.navigate('StackProfile');
+  };
+  const goToSingleTweet = (tweetId) => {
+    navigation.navigate('StackTweet', {
+      tweetId: tweetId,
+    });
+  };
+  const goToNewTweet = () => {
+    navigation.navigate('StackNewTweet');
+  };
 
   const renderItem = ({ item: tweet }) => (
     <View style={styles.tweetContainer}>
@@ -80,7 +79,10 @@ const HomeScreen = ({ navigation }) => {
         />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
-        <TouchableOpacity style={styles.flexRow} onPress={goToSingleTweet}>
+        <TouchableOpacity
+          style={styles.flexRow}
+          onPress={() => goToSingleTweet(tweet.id)}
+        >
           <Text numberOfLines={1} style={styles.tweetName}>
             {tweet.user.name}
           </Text>
@@ -94,7 +96,7 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tweetContentContainer}
-          onPress={goToSingleTweet}
+          onPress={() => goToSingleTweet(tweet.id)}
         >
           <Text style={styles.tweetContent}>{tweet.body}</Text>
         </TouchableOpacity>
