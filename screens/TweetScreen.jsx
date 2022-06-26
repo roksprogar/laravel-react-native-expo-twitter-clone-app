@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   spaceAround: {
-    justifyContent: 'space-around',
+    justifyContent: "space-around",
   },
   profileContainer: {
     flexDirection: "row",
