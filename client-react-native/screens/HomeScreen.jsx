@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,59 +7,70 @@ import {
   Image,
   TouchableOpacity,
   Platform,
-} from "react-native";
-import { EvilIcons } from "@expo/vector-icons";
-import { AntDesign } from "@expo/vector-icons";
+} from 'react-native';
+import axios from 'axios';
+import { EvilIcons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
+import { formatDistanceToNowStrict } from 'date-fns'
 
 const HomeScreen = ({ navigation }) => {
-  const DATA = [
-    { id: "1", title: "Tweet 1" },
-    { id: "2", title: "Tweet 2" },
-    { id: "3", title: "Tweet 3" },
-    { id: "4", title: "Tweet 4" },
-    { id: "5", title: "Tweet 5" },
-    { id: "6", title: "Tweet 6" },
-    { id: "7", title: "Tweet 7" },
-    { id: "8", title: "Tweet 8" },
-    { id: "9", title: "Tweet 9" },
-    { id: "10", title: "Tweet 10" },
-  ];
+  const [data, setData] = useState([]);
 
-  const goToProfile = () => navigation.navigate("StackProfile");
-  const goToSingleTweet = () => navigation.navigate("StackTweet");
-  const goToNewTweet = () => navigation.navigate("StackNewTweet");
+  useEffect(() => {
+    getAllTweets();
+  }, []);
 
-  const renderItem = ({ item }) => (
+  function getAllTweets() {
+    axios
+      .get('http://staging.lifetivation.com/api/tweets')
+      .then((response) => setData(response.data))
+      .catch((error) => console.log(error));
+  }
+  // const DATA = [
+  //   { id: '1', title: 'Tweet 1' },
+  //   { id: '2', title: 'Tweet 2' },
+  //   { id: '3', title: 'Tweet 3' },
+  //   { id: '4', title: 'Tweet 4' },
+  //   { id: '5', title: 'Tweet 5' },
+  //   { id: '6', title: 'Tweet 6' },
+  //   { id: '7', title: 'Tweet 7' },
+  //   { id: '8', title: 'Tweet 8' },
+  //   { id: '9', title: 'Tweet 9' },
+  //   { id: '10', title: 'Tweet 10' },
+  // ];
+
+  const goToProfile = () => navigation.navigate('StackProfile');
+  const goToSingleTweet = () => navigation.navigate('StackTweet');
+  const goToNewTweet = () => navigation.navigate('StackNewTweet');
+
+  const renderItem = ({ item: tweet }) => (
     <View style={styles.tweetContainer}>
       <TouchableOpacity onPress={goToProfile}>
         <Image
           style={styles.avatar}
           source={{
-            uri: "https://reactnative.dev/img/tiny_logo.png",
+            uri: tweet.user.avatar,
           }}
         />
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
         <TouchableOpacity style={styles.flexRow} onPress={goToSingleTweet}>
           <Text numberOfLines={1} style={styles.tweetName}>
-            {item.title}
+            {tweet.user.name}
           </Text>
           <Text numberOfLines={1} style={styles.tweetHandle}>
-            @roksprogar
+            @{tweet.user.username}
           </Text>
           <Text>&middot;</Text>
           <Text numberOfLines={1} style={styles.tweetHandle}>
-            9m
+            {formatDistanceToNowStrict(new Date(tweet.created_at)) }
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tweetContentContainer}
           onPress={goToSingleTweet}
         >
-          <Text style={styles.tweetContent}>
-            tweet content tweet content tweet content tweet content tweet
-            content tweet content tweet content tweet content tweet content
-          </Text>
+          <Text style={styles.tweetContent}>{tweet.body}</Text>
         </TouchableOpacity>
         <View style={styles.tweetEngagement}>
           <TouchableOpacity style={styles.flexRow}>
@@ -91,7 +102,7 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
             <EvilIcons
-              name={Platform.OS === "ios" ? "share-apple" : "share-google"}
+              name={Platform.OS === 'ios' ? 'share-apple' : 'share-google'}
               size={22}
               color="gray"
               style={{ marginRight: 2 }}
@@ -105,7 +116,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={DATA}
+        data={data}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => (
@@ -122,19 +133,19 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: 'white',
   },
   flexRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   textGray: {
-    color: "gray",
+    color: 'gray',
   },
   ml4: {
     marginLeft: 16,
   },
   tweetContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
@@ -145,12 +156,12 @@ const styles = StyleSheet.create({
     borderRadius: 21,
   },
   tweetName: {
-    fontWeight: "bold",
-    color: "#222222",
+    fontWeight: 'bold',
+    color: '#222222',
   },
   tweetHandle: {
     marginHorizontal: 8,
-    color: "gray",
+    color: 'gray',
   },
   tweetContentContainer: {
     margintop: 4,
@@ -159,22 +170,22 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   tweetEngagement: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 12,
   },
   tweetSeparator: {
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: '#e5e7eb',
   },
   floatingButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1d9bf1",
-    position: "absolute",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1d9bf1',
+    position: 'absolute',
     bottom: 20,
     right: 12,
   },
