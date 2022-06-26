@@ -7,14 +7,17 @@ import {
   Image,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import axios from 'axios';
 import { EvilIcons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
-import { formatDistanceToNowStrict } from 'date-fns'
+import { formatDistanceToNowStrict } from 'date-fns';
 
 const HomeScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     getAllTweets();
@@ -22,22 +25,19 @@ const HomeScreen = ({ navigation }) => {
 
   function getAllTweets() {
     axios
-      .get('http://staging.lifetivation.com/api/tweets')
+      .get('https://staging.lifetivation.com/api/tweets')
       .then((response) => setData(response.data))
-      .catch((error) => console.log(error));
+      .catch((error) => console.log(error.response))
+      .finally(() => {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
   }
-  // const DATA = [
-  //   { id: '1', title: 'Tweet 1' },
-  //   { id: '2', title: 'Tweet 2' },
-  //   { id: '3', title: 'Tweet 3' },
-  //   { id: '4', title: 'Tweet 4' },
-  //   { id: '5', title: 'Tweet 5' },
-  //   { id: '6', title: 'Tweet 6' },
-  //   { id: '7', title: 'Tweet 7' },
-  //   { id: '8', title: 'Tweet 8' },
-  //   { id: '9', title: 'Tweet 9' },
-  //   { id: '10', title: 'Tweet 10' },
-  // ];
+
+  function handleRefresh() {
+    setIsRefreshing(true);
+    getAllTweets();
+  }
 
   const goToProfile = () => navigation.navigate('StackProfile');
   const goToSingleTweet = () => navigation.navigate('StackTweet');
@@ -63,7 +63,7 @@ const HomeScreen = ({ navigation }) => {
           </Text>
           <Text>&middot;</Text>
           <Text numberOfLines={1} style={styles.tweetHandle}>
-            {formatDistanceToNowStrict(new Date(tweet.created_at)) }
+            {formatDistanceToNowStrict(new Date(tweet.created_at))}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -115,14 +115,20 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={styles.tweetSeparator}></View>
-        )}
-      />
+      {isLoading ? (
+        <ActivityIndicator style={{ marginTop: 8 }} size="large" color="gray" />
+      ) : (
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={() => (
+            <View style={styles.tweetSeparator}></View>
+          )}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+        />
+      )}
       <TouchableOpacity style={styles.floatingButton} onPress={goToNewTweet}>
         <AntDesign name="plus" size={26} color="white" />
       </TouchableOpacity>
