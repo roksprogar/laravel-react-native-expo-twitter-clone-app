@@ -6,13 +6,36 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import axiosConfig from '../helpers/axiosConfig';
 
 const NewTweetScreen = ({ navigation }) => {
   const [tweet, setTweet] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const sendTweet = () => {
-    navigation.navigate('TabHome');
+    if (tweet.length === 0) {
+      Alert.alert('Please enter a tweet.')
+      return;
+    }
+    setIsLoading(true);
+    axiosConfig
+      .post(`/tweets`, {
+        body: tweet,
+      })
+      .then((response) => {
+        navigation.navigate('TabHome', {
+          newTweetAdded: response.data // This is used to refresh the home screen, anything could be returned, but it has to be unique for each tweet.
+        });
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.log(error);
+        setIsLoading(false);
+      })
+      .finally(() => {});
   };
 
   return (
@@ -21,11 +44,20 @@ const NewTweetScreen = ({ navigation }) => {
         <Text style={tweet.length > 250 ? styles.textRed : styles.textGray}>
           Characters left: {280 - tweet.length}
         </Text>
-        <TouchableOpacity style={styles.tweetButton}>
-          <Text style={styles.tweetButtonText} onPress={sendTweet}>
-            Tweet
-          </Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {isLoading && (
+            <ActivityIndicator
+              size="small"
+              color="gray"
+              style={{ marginRight: 4 }}
+            />
+          )}
+          <TouchableOpacity style={styles.tweetButton} onPress={sendTweet} disabled={isLoading}>
+            <Text style={styles.tweetButtonText}>
+              Tweet
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.tweetBoxContainer}>

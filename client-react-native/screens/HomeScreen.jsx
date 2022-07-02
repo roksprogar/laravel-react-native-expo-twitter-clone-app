@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,16 +14,26 @@ import { EvilIcons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 import { formatDistanceToNowStrict } from 'date-fns';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ route, navigation }) => {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+  const flatListRef = useRef();
 
   useEffect(() => {
     getAllTweets();
   }, [page]);
+
+  useEffect(() => {
+    if (route.params?.newTweetAdded) {
+      getAllTweetsRefresh();
+      flatListRef.current.scrollToOffset({
+        offset: 0,
+      });
+    }
+  }, [route.params?.newTweetAdded]); // Optional chaining, the param only exists when a new tweet is added.
 
   function getAllTweets() {
     axiosConfig
@@ -38,6 +48,23 @@ const HomeScreen = ({ navigation }) => {
         if (!response.data.next_page_url) {
           setIsAtEndOfScrolling(true);
         }
+      })
+      .catch((error) => console.log(error.response))
+      .finally(() => {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  }
+
+  function getAllTweetsRefresh() {
+    setPage(1);
+    setIsAtEndOfScrolling(false);
+    setIsRefreshing(false);
+
+    axiosConfig
+      .get(`tweets`)
+      .then((response) => {
+        setData(response.data.data);
       })
       .catch((error) => console.log(error.response))
       .finally(() => {
@@ -147,6 +174,7 @@ const HomeScreen = ({ navigation }) => {
         <ActivityIndicator style={{ marginTop: 8 }} size="large" color="gray" />
       ) : (
         <FlatList
+          ref={flatListRef}
           data={data}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
