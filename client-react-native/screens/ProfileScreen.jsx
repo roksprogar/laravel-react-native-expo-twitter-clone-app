@@ -9,29 +9,26 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
+
+import RenderItem from '../components/RenderItem';
+
 import axiosConfig from '../helpers/axiosConfig';
 import { EvilIcons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 
-const ProfileScreen = ({ route, navigation }) => {
+const ProfileScreen = ({ route }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const DATA = [
-    { id: '1', title: 'Tweet 1' },
-    { id: '2', title: 'Tweet 2' },
-    { id: '3', title: 'Tweet 3' },
-    { id: '4', title: 'Tweet 4' },
-    { id: '5', title: 'Tweet 5' },
-    { id: '6', title: 'Tweet 6' },
-    { id: '7', title: 'Tweet 7' },
-    { id: '8', title: 'Tweet 8' },
-    { id: '9', title: 'Tweet 9' },
-    { id: '10', title: 'Tweet 10' },
-  ];
+  const [data, setData] = useState([]);
+  const [isLoadingTweets, setIsLoadingTweets] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
 
   useEffect(() => {
     getUserProfile();
-  }, []);
+    getUserTweets();
+  }, [page]);
 
   function getUserProfile() {
     axiosConfig
@@ -45,11 +42,36 @@ const ProfileScreen = ({ route, navigation }) => {
       });
   }
 
-  const renderItem = ({ item }) => (
-    <View style={{ marginVertical: 20 }}>
-      <Text>{item.title}</Text>
-    </View>
-  );
+  function getUserTweets() {
+    axiosConfig
+      .get(`users/${route.params.userId}/tweets?page=${page}`)
+      .then((response) => {
+        if (page === 1) {
+          setData(response.data.data);
+        } else {
+          setData([...data, ...response.data.data]);
+        }
+
+        if (!response.data.next_page_url) {
+          setIsAtEndOfScrolling(true);
+        }
+      })
+      .catch((error) => console.log(error.response))
+      .finally(() => {
+        setIsLoadingTweets(false);
+        setIsRefreshing(false);
+      });
+  }
+
+  function handleRefresh() {
+    page === 1 ? getUserTweets() : setPage(1);
+    setIsRefreshing(true);
+    setIsAtEndOfScrolling(false);
+  }
+
+  function handleEnd() {
+    setPage(page + 1);
+  }
 
   const profileHeader = () => (
     <View style={styles.container}>
@@ -100,7 +122,9 @@ const ProfileScreen = ({ route, navigation }) => {
             </TouchableOpacity>
             <View style={[styles.linkItem, styles.ml4]}>
               <EvilIcons name="calendar" size={24} color="gray" />
-              <Text style={styles.textGray}>Joined {format( new Date(user.created_at),'MMM yyyy')}</Text>
+              <Text style={styles.textGray}>
+                Joined {format(new Date(user.created_at), 'MMM yyyy')}
+              </Text>
             </View>
           </View>
 
@@ -122,14 +146,29 @@ const ProfileScreen = ({ route, navigation }) => {
   );
 
   return (
-    <FlatList
-      style={styles.container}
-      data={DATA}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      ItemSeparatorComponent={() => <View style={styles.separator}></View>}
-      ListHeaderComponent={profileHeader}
-    />
+    <View style={styles.container}>
+      {isLoadingTweets ? (
+        <ActivityIndicator style={{ marginTop: 8 }} size="large" color="gray" />
+      ) : (
+        <FlatList
+          data={data}
+          renderItem={(props) => <RenderItem {...props} />}
+          keyExtractor={(item) => item.id.toString()}
+          ItemSeparatorComponent={() => <View style={styles.separator}></View>}
+          ListHeaderComponent={profileHeader}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onEndReached={handleEnd}
+          onEndReachedThreshold={0.001} // If set to 0, the handleEnd will only fire once.
+          ListFooterComponent={() =>
+            !isAtEndOfScrolling && (
+              <ActivityIndicator size="large" color="gray" />
+            )
+          }
+          scrollIndicatorInsets={{ right: 1 }}
+        />
+      )}
+    </View>
   );
 };
 

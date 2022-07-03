@@ -42,3 +42,7 @@ Route::post('/tweets', function (Request $request) {
 Route::get('/users/{user}', function (User $user) {
     return $user;
 });
+
+Route::get('/users/{user}/tweets', function (User $user) {
+    return $user->tweets()->with('user:id,name,username,avatar')->latest()->paginate(10); // It's redundant to load the same user for each tweet for the tweets on the profile screen.
+});

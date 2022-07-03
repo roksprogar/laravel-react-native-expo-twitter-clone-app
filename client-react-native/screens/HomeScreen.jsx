@@ -1,18 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   FlatList,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
+
 import axiosConfig from '../helpers/axiosConfig';
-import { EvilIcons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
-import { formatDistanceToNowStrict } from 'date-fns';
+
+import RenderItem from '../components/RenderItem';
 
 const HomeScreen = ({ route, navigation }) => {
   const [data, setData] = useState([]);
@@ -20,6 +18,7 @@ const HomeScreen = ({ route, navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+
   const flatListRef = useRef();
 
   useEffect(() => {
@@ -83,94 +82,9 @@ const HomeScreen = ({ route, navigation }) => {
     setPage(page + 1);
   }
 
-  function goToProfile(userId) {
-    navigation.navigate('StackProfile', {
-      userId: userId,
-    });
-  }
-
-  const goToSingleTweet = (tweetId) => {
-    navigation.navigate('StackTweet', {
-      tweetId: tweetId,
-    });
-  };
-
   const goToNewTweet = () => {
     navigation.navigate('StackNewTweet');
   };
-
-  const renderItem = ({ item: tweet }) => (
-    <View style={styles.tweetContainer}>
-      <TouchableOpacity onPress={() => goToProfile(tweet.user.id)}>
-        <Image
-          style={styles.avatar}
-          source={{
-            uri: tweet.user.avatar,
-          }}
-        />
-      </TouchableOpacity>
-      <View style={{ flex: 1 }}>
-        <TouchableOpacity
-          style={styles.flexRow}
-          onPress={() => goToSingleTweet(tweet.id)}
-        >
-          <Text numberOfLines={1} style={styles.tweetName}>
-            {tweet.user.name}
-          </Text>
-          <Text numberOfLines={1} style={styles.tweetHandle}>
-            @{tweet.user.username}
-          </Text>
-          <Text>&middot;</Text>
-          <Text numberOfLines={1} style={styles.tweetHandle}>
-            {formatDistanceToNowStrict(new Date(tweet.created_at))}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.tweetContentContainer}
-          onPress={() => goToSingleTweet(tweet.id)}
-        >
-          <Text style={styles.tweetContent}>{tweet.body}</Text>
-        </TouchableOpacity>
-        <View style={styles.tweetEngagement}>
-          <TouchableOpacity style={styles.flexRow}>
-            <EvilIcons
-              name="comment"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>456</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name="retweet"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>32</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name="heart"
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-            <Text style={styles.textGray}>4,456</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.flexRow, styles.ml4]}>
-            <EvilIcons
-              name={Platform.OS === 'ios' ? 'share-apple' : 'share-google'}
-              size={22}
-              color="gray"
-              style={{ marginRight: 2 }}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -180,7 +94,7 @@ const HomeScreen = ({ route, navigation }) => {
         <FlatList
           ref={flatListRef}
           data={data}
-          renderItem={renderItem}
+          renderItem={(props) => <RenderItem {...props} />} // Because of the useNavigation hook in the RenderItem component.
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={() => (
             <View style={styles.tweetSeparator}></View>
@@ -188,7 +102,7 @@ const HomeScreen = ({ route, navigation }) => {
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
           onEndReached={handleEnd}
-          onEndReachedThreshold={0.001}
+          onEndReachedThreshold={0.001} // If set to 0, the handleEnd will only fire once.
           ListFooterComponent={() =>
             !isAtEndOfScrolling && (
               <ActivityIndicator size="large" color="gray" />
@@ -207,45 +121,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-  },
-  flexRow: {
-    flexDirection: 'row',
-  },
-  textGray: {
-    color: 'gray',
-  },
-  ml4: {
-    marginLeft: 16,
-  },
-  tweetContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    marginRight: 8,
-    borderRadius: 21,
-  },
-  tweetName: {
-    fontWeight: 'bold',
-    color: '#222222',
-  },
-  tweetHandle: {
-    marginHorizontal: 8,
-    color: 'gray',
-  },
-  tweetContentContainer: {
-    margintop: 4,
-  },
-  tweetContent: {
-    lineHeight: 20,
-  },
-  tweetEngagement: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
   },
   tweetSeparator: {
     borderBottomWidth: 1,
