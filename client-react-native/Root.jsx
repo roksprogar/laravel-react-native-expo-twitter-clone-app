@@ -123,9 +123,7 @@ export default function App() {
   useEffect(() => {
     // TODO: Check if a user is logged in or not.
     // TODO: Check SecureStore for the user object/token.
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
+    setIsLoading(false);
   }, []);
 
   if (isLoading) {
