@@ -83,21 +83,25 @@ const HomeScreen = ({ route, navigation }) => {
     setPage(page + 1);
   }
 
-  const goToProfile = () => {
-    navigation.navigate('StackProfile');
-  };
+  function goToProfile(userId) {
+    navigation.navigate('StackProfile', {
+      userId: userId,
+    });
+  }
+
   const goToSingleTweet = (tweetId) => {
     navigation.navigate('StackTweet', {
       tweetId: tweetId,
     });
   };
+
   const goToNewTweet = () => {
     navigation.navigate('StackNewTweet');
   };
 
   const renderItem = ({ item: tweet }) => (
     <View style={styles.tweetContainer}>
-      <TouchableOpacity onPress={goToProfile}>
+      <TouchableOpacity onPress={() => goToProfile(tweet.user.id)}>
         <Image
           style={styles.avatar}
           source={{

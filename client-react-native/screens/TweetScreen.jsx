@@ -22,9 +22,7 @@ const TweetScreen = ({ route, navigation }) => {
 
   function getTweet() {
     axiosConfig
-      .get(
-        `tweets/${route.params.tweetId}`
-      )
+      .get(`tweets/${route.params.tweetId}`)
       .then((response) => {
         setTweet(response.data);
         setIsLoading(false);
@@ -36,7 +34,11 @@ const TweetScreen = ({ route, navigation }) => {
       .finally(() => {});
   }
 
-  const goToProfile = () => navigation.navigate('StackProfile');
+  function goToProfile(userId) {
+    navigation.navigate('StackProfile', {
+      userId: userId,
+    });
+  }
 
   return (
     <View style={styles.container}>
@@ -45,7 +47,7 @@ const TweetScreen = ({ route, navigation }) => {
       ) : (
         <>
           <View style={styles.profileContainer}>
-            <TouchableOpacity style={styles.flexRow} onPress={goToProfile}>
+            <TouchableOpacity style={styles.flexRow} onPress={() => goToProfile(tweet.user.id)}>
               <Image
                 style={styles.avatar}
                 source={{
