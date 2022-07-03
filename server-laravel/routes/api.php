@@ -3,7 +3,9 @@
 use App\Models\User;
 use App\Models\Tweet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,4 +47,34 @@ Route::get('/users/{user}', function (User $user) {
 
 Route::get('/users/{user}/tweets', function (User $user) {
     return $user->tweets()->with('user:id,name,username,avatar')->latest()->paginate(10); // It's redundant to load the same user for each tweet for the tweets on the profile screen.
+});
+
+Route::post('/login', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+        'device_name' => 'required',
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (! $user || ! Hash::check($request->password, $user->password)) {
+        throw ValidationException::withMessages([
+            'email' => ['The provided credentials are incorrect.'],
+        ]);
+    }
+
+    $token = $user->createToken($request->device_name)->plainTextToken;
+
+    return response()->json([
+        'token' => $token,
+        'user' => $user->only('id', 'name', 'username', 'email', 'avatar'),
+    ], 201);
+});
+
+// Could be a logout function if we used any of the larave scaffolding.
+Route::middleware('auth:sanctum')->post('/logout', function (Request $request) {
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->json('Logged out', 200);
 });

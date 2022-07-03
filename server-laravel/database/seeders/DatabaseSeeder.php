@@ -15,10 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // The user for api testing
+        User::factory()
+            ->has(Tweet::factory()->count(60))
+            ->create([
+                'name' => 'Rok Sprogar',
+                'email' => 'rok.sprogar@gmail.com',
+            ]);
+
         // Ten users with 4 tweets each.
         User::factory()
-            ->count(10)
-            ->has(Tweet::factory()->count(60))
+            ->count(9)
+            ->has(Tweet::factory()->count(50))
             ->create();
     }
 }

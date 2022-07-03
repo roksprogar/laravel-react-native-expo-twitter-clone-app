@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
+import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from './screens/HomeScreen';
@@ -122,8 +122,19 @@ export default function App() {
 
   useEffect(() => {
     // TODO: Check if a user is logged in or not.
-    // TODO: Check SecureStore for the user object/token.
-    setIsLoading(false);
+    // Check SecureStore for the user object/token.
+    SecureStore.getItemAsync('user')
+      .then((userString) => {
+        if (userString) {
+          setUser(JSON.parse(userString))
+        }
+      })
+      .catch((error) => {
+        console.log(error.response);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   if (isLoading) {
