@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import axiosConfig from '../../helpers/axiosConfig';
 
 export default function SignupScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -20,11 +21,31 @@ export default function SignupScreen({ navigation }) {
   const [error, setError] = useState(null);
 
   function register(email, username, password, confirmPassword) {
+    if (name.length < 1) {
+      Alert.alert('Please enter a name!');
+      return;
+    }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      Alert.alert('Register Logic here');
-    }, 2000);
+    axiosConfig
+      .post('/signup', {
+        name,
+        email,
+        username,
+        password,
+        password_confirmation: confirmPassword,
+      })
+      .then((response) => {
+        setError(null);
+        Alert.alert('User created! Please login.');
+        navigation.navigate('StackLogin');
+      })
+      .catch((error) => {
+        const key = Object.keys(error.response.data.errors)[0];
+        setError(error.response.data.errors[key][0]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
   return (
