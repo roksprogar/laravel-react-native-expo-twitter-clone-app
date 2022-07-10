@@ -28,13 +28,13 @@ const HomeScreen = ({ route, navigation }) => {
   }, [page]);
 
   useEffect(() => {
-    if (route.params?.newTweetAdded) {
+    if (route.params?.newTweetAdded || route.params?.tweetDeleted) {
       getAllTweetsRefresh();
       flatListRef.current.scrollToOffset({
         offset: 0,
       });
     }
-  }, [route.params?.newTweetAdded]); // Optional chaining, the param only exists when a new tweet is added.
+  }, [route.params?.newTweetAdded, route.params?.tweetDeleted]); // Optional chaining, the param only exists when a tweet is added/deleted.
 
   function getAllTweets() {
     axiosConfig.defaults.headers.common[
