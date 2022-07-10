@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // The user for api testing
         User::factory()
-            ->has(Tweet::factory()->count(60))
+            ->has(Tweet::factory()->count(5))
             ->create([
                 'name' => 'Rok Sprogar',
                 'email' => 'rok.sprogar@gmail.com',
@@ -25,8 +25,39 @@ class DatabaseSeeder extends Seeder
 
         // Ten users with 4 tweets each.
         User::factory()
-            ->count(9)
-            ->has(Tweet::factory()->count(50))
+            ->count(99)
+            ->sequence(fn ($sequence) => ['name' => 'Person ' . $sequence->index + 2])
+            ->has(Tweet::factory()->count(5))
             ->create();
+
+        foreach (range(1, 20) as $user_id) {
+            foreach (range(1, 20) as $user_id2) {
+                User::find($user_id)->follows()->attach(User::find($user_id2));
+            }
+        }
+
+        foreach (range(21, 40) as $user_id) {
+            foreach (range(21, 40) as $user_id2) {
+                User::find($user_id)->follows()->attach(User::find($user_id2));
+            }
+        }
+
+        foreach (range(41, 60) as $user_id) {
+            foreach (range(41, 60) as $user_id2) {
+                User::find($user_id)->follows()->attach(User::find($user_id2));
+            }
+        }
+
+        foreach (range(61, 80) as $user_id) {
+            foreach (range(61, 80) as $user_id2) {
+                User::find($user_id)->follows()->attach(User::find($user_id2));
+            }
+        }
+
+        foreach (range(81, 100) as $user_id) {
+            foreach (range(81, 100) as $user_id2) {
+                User::find($user_id)->follows()->attach(User::find($user_id2));
+            }
+        }
     }
 }

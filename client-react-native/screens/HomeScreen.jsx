@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   FlatList,
@@ -11,6 +11,7 @@ import axiosConfig from '../helpers/axiosConfig';
 import { AntDesign } from '@expo/vector-icons';
 
 import RenderItem from '../components/RenderItem';
+import { AuthContext } from '../context/AuthProvider';
 
 const HomeScreen = ({ route, navigation }) => {
   const [data, setData] = useState([]);
@@ -18,6 +19,7 @@ const HomeScreen = ({ route, navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [isAtEndOfScrolling, setIsAtEndOfScrolling] = useState(false);
+  const { user } = useContext(AuthContext);
 
   const flatListRef = useRef();
 
@@ -35,6 +37,10 @@ const HomeScreen = ({ route, navigation }) => {
   }, [route.params?.newTweetAdded]); // Optional chaining, the param only exists when a new tweet is added.
 
   function getAllTweets() {
+    axiosConfig.defaults.headers.common[
+      'Authorization'
+    ] = `Bearer ${user.token}`;
+
     axiosConfig
       .get(`tweets?page=${page}`)
       .then((response) => {
@@ -59,6 +65,10 @@ const HomeScreen = ({ route, navigation }) => {
     setPage(1);
     setIsAtEndOfScrolling(false);
     setIsRefreshing(false);
+
+    axiosConfig.defaults.headers.common[
+      'Authorization'
+    ] = `Bearer ${user.token}`;
 
     axiosConfig
       .get(`tweets`)
