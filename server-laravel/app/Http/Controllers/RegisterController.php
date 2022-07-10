@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tweet;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Requests\UpdateTweetRequest;
+use Illuminate\Support\Facades\Hash;
 
-class TweetController extends Controller
+class RegisterController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,9 +15,7 @@ class TweetController extends Controller
      */
     public function index()
     {
-        $followers = auth()->user()->follows->pluck('id');
-
-        return Tweet::with('user:id,name,username,avatar')->whereIn('user_id', $followers)->latest()->paginate(10);
+        //
     }
 
     /**
@@ -33,39 +31,49 @@ class TweetController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\Request  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
         $request->validate([
-            'body' => 'required',
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'username' => 'required|min:4|unique:users',
+            'password' => 'required|min:6|confirmed',
         ]);
 
-        return Tweet::create([
-            'user_id' => auth()->id(),
-            'body' => $request->body,
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
         ]);
+
+        // So that each user sees their own tweets as well.
+        $user->follows()->attach($user);
+
+        return response()->json($user, 201);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Tweet  $tweet
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Tweet $tweet)
+    public function show($id)
     {
-        return $tweet->load('user:id,name,username,avatar');
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Tweet  $tweet
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Tweet $tweet)
+    public function edit($id)
     {
         //
     }
@@ -73,11 +81,11 @@ class TweetController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\UpdateTweetRequest  $request
-     * @param  \App\Models\Tweet  $tweet
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateTweetRequest $request, Tweet $tweet)
+    public function update(Request $request, $id)
     {
         //
     }
@@ -85,13 +93,11 @@ class TweetController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Tweet  $tweet
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Tweet $tweet)
+    public function destroy($id)
     {
-        abort_if($tweet->user->id !== auth()->id(), 403);
-
-        return response()->json($tweet->delete(), 200);
+        //
     }
 }
