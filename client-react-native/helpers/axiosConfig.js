@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'https://staging.lifetivation.com/api',
+  baseURL: 'http://twitterclone.local/api', // Should be used in an .env fiel as well.
 });
 
 export default instance;
